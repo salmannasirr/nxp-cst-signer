@@ -22,7 +22,7 @@ char *trim(char *s) {
 char *get_value(char *line, const char *exp_key) {
     if (!line || !exp_key) return NULL;
 
-    char *line_copy = strdup(line);                // make a copy so strtok doesn't destroy original
+    char *line_copy = strdup(line); 
     if (!line_copy) return NULL;
 
     char *key = strtok(line_copy, DELIMITER);
@@ -33,15 +33,15 @@ char *get_value(char *line, const char *exp_key) {
 
     key = trim(key);
     if (strncmp(key, exp_key, strlen(exp_key)) == 0) {
-        char *val = line + strlen(key) + 1;
-        val = trim(val);
+        char *val = line + strlen(key);  // start at '='
+        while (*val == '=' || *val == ' ' || *val == '\t') val++;  // skip '=' and spaces/tabs
 
         /* Strip trailing inline comment (# or //) */
         char *comment = strstr(val, "#");
         if (!comment) comment = strstr(val, "//");
         if (comment) *comment = '\0';
 
-        val = trim(val);  // final trim after removing comment
+        val = trim(val);  
         FREE(line_copy);
         return val;
     }
