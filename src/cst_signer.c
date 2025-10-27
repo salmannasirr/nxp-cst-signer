@@ -528,7 +528,7 @@ static int create_csf_file_v3(char *csf_filename, char *ifname, csf_params_t *cs
 
     cfg_parser(fp_cfg, rvalue, RSIZE, "srk_source");
     if ('\0' == rvalue[0])
-        fprintf(fp_csf_file, "\tSource = \"%s/crts/SRK1_sha25645_secpr1256v1_v3_ca_crt.pem\"\n", g_cst_path);
+        fprintf(fp_csf_file, "\tSource = \"%s/crts/SRK1_sha384_secp384r1_v3_ca_crt.der\"\n", g_cst_path);
     else
         fprintf(fp_csf_file, "\tSource = \"%s/crts/%s\"\n", g_cst_path, rvalue);
 
