@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <cfg_parser.h>
 
 #define DELIMITER "="
 #define FREE(p) do { if(p) free(p); } while(0)
