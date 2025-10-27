@@ -488,6 +488,8 @@ static int create_csf_file_v3(char *csf_filename, char *ifname, csf_params_t *cs
     ASSERT(csf_filename, -1);
     ASSERT(ifname, -1);
     ASSERT(csf_param, -1);
+    
+    printf("INFO: Starting CSF generation:\n  CSF file: %s\n  Input file: %s\n  CST path: %s\n  CSF config: %s\n", csf_filename, ifname, g_cst_path, g_csf_cfgfilename);
 
     char rvalue[RSIZE] = {0};
 
@@ -512,26 +514,44 @@ static int create_csf_file_v3(char *csf_filename, char *ifname, csf_params_t *cs
     fprintf(fp_csf_file, "\tTarget = AHAB\n");
 
     cfg_parser(fp_cfg, rvalue, RSIZE,"header_version");
-    if ('\0' == rvalue[0])
+    
+    printf("Header version parsed: full='%s', first char='%c'\n", rvalue, rvalue[0]);
+    
+    if ('\0' == rvalue[0]){
         fprintf(fp_csf_file, "\tVersion = 1.0\n");
-    else
+        printf("I entered if of header version");
+        }
+    else{
         fprintf(fp_csf_file, "\tVersion = %s\n", rvalue);
-
+        printf("I entered else of header version----");
+}
     /* Install SRK */
     fprintf(fp_csf_file, "[Install SRK]\n");
 
     cfg_parser(fp_cfg, rvalue, RSIZE, "srktable_file");
-    if ('\0' == rvalue[0])
+    
+    printf("Install SRK section parsed: full='%s', first char='%c'\n", rvalue, rvalue[0]);
+    
+    if ('\0' == rvalue[0]){
         fprintf(fp_csf_file, "\tFile = \"%s/crts/SRK_1_2_3_4_table.bin\"\n", g_cst_path);
-    else
+        printf("entered if condiiton of srk section");
+    }
+    else{
         fprintf(fp_csf_file, "\tFile = \"%s/crts/%s\"\n", g_cst_path, rvalue);
-
+        printf("entered else section of SRK section");
+}
     cfg_parser(fp_cfg, rvalue, RSIZE, "srk_source");
-    if ('\0' == rvalue[0])
+    
+    printf("srk_source parsed: full='%s', first char='%c'\n", rvalue, rvalue[0]);
+    
+    if ('\0' == rvalue[0]){
+    printf("entered if condiiton of srk_source");
         fprintf(fp_csf_file, "\tSource = \"%s/crts/SRK1_sha256_secp256r1_v3_ca_crt.pem\"\n", g_cst_path);
-    else
+    }
+    else{
         fprintf(fp_csf_file, "\tSource = \"%s/crts/%s\"\n", g_cst_path, rvalue);
-
+        printf("entered else condiiton of srk_source");
+}
     cfg_parser(fp_cfg, rvalue, RSIZE, "srk_source_index");
     if ('\0' == rvalue[0])
         fprintf(fp_csf_file, "\tSource index = 0\n");
@@ -553,16 +573,24 @@ static int create_csf_file_v3(char *csf_filename, char *ifname, csf_params_t *cs
     /* Install SGK */
     /* Add SGK info only if its value is populated in config file */
     cfg_parser(fp_cfg, rvalue, RSIZE, "sgk_file");
+    
+    printf("sgk_file parsed: full='%s', first char='%c'\n", rvalue, rvalue[0]);
+    
     if ('\0' != rvalue[0]) {
         fprintf(fp_csf_file, "[Install Certificate]\n");
 
         fprintf(fp_csf_file, "\tFile = \"%s/crts/%s\"\n", g_cst_path, rvalue);
 
         cfg_parser(fp_cfg, rvalue, RSIZE, "sgk_permissions");
-        if ('\0' == rvalue[0])
+        printf("srk_permissions parsed: full='%s', first char='%c'\n", rvalue, rvalue[0]);
+        if ('\0' == rvalue[0]){
             fprintf(fp_csf_file, "\tPermissions = 0x1\n");
-        else
+            printf("entered if condition of srk permissions");
+        }
+        else{
             fprintf(fp_csf_file, "\tPermissions = %s\n", rvalue);
+            printf("entered else condition of srk permissions");
+    }
     }
 
     /* Authenticate Data */
