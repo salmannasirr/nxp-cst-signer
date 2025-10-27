@@ -47,23 +47,24 @@ void cfg_parser(FILE *fp_cfgfile, char *res_val, unsigned int res_size, char *ex
     ssize_t read_len = 0;
     char *res = NULL;
 
-    /* Clear the result value */
     memset(res_val, 0, res_size);
+    rewind(fp_cfgfile);   // 🔥 KEY FIX: start at beginning each time
 
-    while(-1 != (read_len = getline(&line_buf, &length, fp_cfgfile))) {
-        /* Ignore comments & empty lines */
-        if (!(strncmp(line_buf, "#", 1)) || \
-            !(strncmp(line_buf, "//", 2)) || \
-            ('\0' == line_buf[0]))
+    while (-1 != (read_len = getline(&line_buf, &length, fp_cfgfile))) {
+        if (!(strncmp(line_buf, "#", 1)) ||
+            !(strncmp(line_buf, "//", 2)) ||
+            ('\0' == line_buf[0]) ||
+            ('[' == line_buf[0]))   // skip section headers
             continue;
-        /* Get value of the corresponding key */
+
         res = get_value(line_buf, exp_key);
         if (NULL != res) {
-            /* Copy until the new line character */
             strncpy(res_val, res, strlen(res) - 1);
+            res_val[strcspn(res_val, "\r\n ")] = '\0';  // trim trailing newline/space
             break;
         }
     }
 
     FREE(line_buf);
 }
+
