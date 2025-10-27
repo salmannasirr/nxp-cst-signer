@@ -1,0 +1,14 @@
+--------------------------------------------
+NXP Software Content Register
+
+Package:                     nxp-cst-signer
+Version:                     v1.1
+Date:                        June 2024
+Outgoing License:            GPL-2.0-only
+License File:                LICENSE.txt
+Type of content:             Source code
+Description and comments:    Signing automation tool using CST
+Release Location:            https://github.com/nxp-imx-support/nxp-cst-signer/
+Origin:                      NXP (GPL-2.0-only)
+
+--------------------------------------------
