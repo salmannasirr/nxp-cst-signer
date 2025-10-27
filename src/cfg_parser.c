@@ -1,70 +1,80 @@
-/*
- * Copyright 2021-2024 NXP
- * SPDX-License-Identifier: GPL-2.0-only
- *
- */
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-#include <cfg_parser.h>
+#define DELIMITER "="
+#define FREE(p) do { if(p) free(p); } while(0)
 
-#define DELIMITER       "="
+/* Trim leading and trailing spaces, tabs, and newlines */
+char *trim(char *s) {
+    if (!s) return NULL;
 
-/*
- * @brief       Get value of the corresponding key in the configuration file
- *
- * @param[in]   line    : Line being parsed in the file
- *              exp_key : Expected key in the configuration
- *
- * @retval      Success : Pointer to the value
- */
-char *get_value(char *line, const char *exp_key)
-{
-    char *key = NULL;
-    if (NULL == line || NULL == exp_key) {
-        fprintf(stderr, "ERROR: Invalid inputs to parser");
+    while (*s == ' ' || *s == '\t') s++;          // leading spaces
+    char *end = s + strlen(s) - 1;
+    while (end > s && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r'))
+        *end-- = '\0';                            // trailing spaces/newlines
+
+    return s;
+}
+
+/* Extract value corresponding to exp_key in line */
+char *get_value(char *line, const char *exp_key) {
+    if (!line || !exp_key) return NULL;
+
+    char *line_copy = strdup(line);                // make a copy so strtok doesn't destroy original
+    if (!line_copy) return NULL;
+
+    char *key = strtok(line_copy, DELIMITER);
+    if (!key) {
+        FREE(line_copy);
         return NULL;
     }
 
-    key = strtok(line, DELIMITER);
-    if (NULL != key && !(strncmp(key, exp_key, strlen(exp_key)))) {
-        return &line[strlen(key) + 1];
+    key = trim(key);
+    if (strncmp(key, exp_key, strlen(exp_key)) == 0) {
+        char *val = line + strlen(key) + 1;
+        val = trim(val);
+
+        /* Strip trailing inline comment (# or //) */
+        char *comment = strstr(val, "#");
+        if (!comment) comment = strstr(val, "//");
+        if (comment) *comment = '\0';
+
+        val = trim(val);  // final trim after removing comment
+        FREE(line_copy);
+        return val;
     }
+
+    FREE(line_copy);
     return NULL;
 }
 
-/*
- * @brief       Parse an input configuration file
- *
- * @param[in]   fp_cfgfile  : Input configuration file
- *              exp_key     : Expected key
- *              res_size    : Size of result value
- * @param[out]  res_val     : Result value
- *
- */
-void cfg_parser(FILE *fp_cfgfile, char *res_val, unsigned int res_size, char *exp_key)
-{
+/* Parse configuration file for exp_key and copy result to res_val */
+void cfg_parser(FILE *fp_cfgfile, char *res_val, unsigned int res_size, char *exp_key) {
+    if (!fp_cfgfile || !res_val || !exp_key) return;
+
     char *line_buf = NULL;
     size_t length = 0;
-    ssize_t read_len = 0;
-    char *res = NULL;
+    ssize_t read_len;
+    char *res;
 
     memset(res_val, 0, res_size);
-    rewind(fp_cfgfile);   // 🔥 KEY FIX: start at beginning each time
+    rewind(fp_cfgfile);
 
     while (-1 != (read_len = getline(&line_buf, &length, fp_cfgfile))) {
-        if (!(strncmp(line_buf, "#", 1)) ||
-            !(strncmp(line_buf, "//", 2)) ||
-            ('\0' == line_buf[0]) ||
-            ('[' == line_buf[0]))   // skip section headers
+        char *line = trim(line_buf);
+
+        /* Skip empty lines, comments, and section headers */
+        if (!line[0] || line[0] == '#' || (line[0] == '/' && line[1] == '/') || line[0] == '[')
             continue;
 
-        res = get_value(line_buf, exp_key);
-        if (NULL != res) {
-            strncpy(res_val, res, strlen(res) - 1);
-            res_val[strcspn(res_val, "\r\n ")] = '\0';  // trim trailing newline/space
+        res = get_value(line, exp_key);
+        if (res) {
+            strncpy(res_val, res, res_size - 1);
+            res_val[res_size - 1] = '\0';
             break;
         }
     }
 
     FREE(line_buf);
 }
-
