@@ -507,6 +507,16 @@ static int create_csf_file_v3(char *csf_filename, char *ifname, csf_params_t *cs
        goto err;
     }
 
+    printf("=== CSF Config File: %s ===\n", g_csf_cfgfilename);
+    char cfg_line[512];
+    while (fgets(cfg_line, sizeof(cfg_line), fp_cfg) != NULL) {
+        printf("%s", cfg_line);
+    }
+    printf("=== End of CSF Config ===\n");
+
+    /* Rewind the file so that parsing can start from the beginning */
+    rewind(fp_cfg);
+
     /* Populate CSF file with appropriate parameters */
     /* Header */
     fprintf(fp_csf_file, "[Header]\n");
